@@ -1,15 +1,3 @@
-//multithreaded server:
-//parse args (port) X
-//setup X
-//bind X 
-//listen X
-//loop forever and accept clients, main will just throw clients in thread and deal with them
-    //all communcation between client will be done in thread
-    //each client will live in a thread
-    //allow client intractions
-    //relay messages between users
-    //timeout process
-
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>

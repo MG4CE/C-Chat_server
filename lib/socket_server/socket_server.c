@@ -23,10 +23,10 @@ int accept_connection(server_socket_t *server_info) {
 	return accept(server_info->socket_descriptor, (struct sockaddr *)&client, (socklen_t*)&c);
 }
 
-int send_message(int client_fd, char *message, size_t message_size) {
+int send_message(int client_fd, message_t *message, size_t message_size) {
 	return write(client_fd, message, message_size);
 }
 
-int fetch_message(int client_fd, char *message, size_t message_size) {
+int fetch_message(int client_fd, message_t *message, size_t message_size) {
     return recv(client_fd, message, message_size, 0);
 }

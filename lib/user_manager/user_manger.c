@@ -15,9 +15,9 @@ void add_user(user_list_t *list, user_t *node) {
     node->next = NULL;
 }
 
-void remove_user(user_list_t *list, user_t *node) {
+int remove_user(user_list_t *list, user_t *node) {
     if (list == NULL || (list->head == NULL && list->tail == NULL)) {
-        return;
+        return 0;
     }
 
     if (list->head == node && list->head == list->tail) {
@@ -25,7 +25,7 @@ void remove_user(user_list_t *list, user_t *node) {
         list->head = NULL;
         list->tail = NULL;
         node = NULL;
-        return;
+        return 1;
     }
 
     user_t *temp = list->head->next;
@@ -38,14 +38,16 @@ void remove_user(user_list_t *list, user_t *node) {
             }
             prev->next = temp->next;
             free(temp);
-            return;
+            return 1;
         }
         prev = temp;
         temp = temp->next;
     }
+
+    return 0;
 }
 
-user_t * get_user(user_list_t *list, char *username) {
+user_t * get_user_username(user_list_t *list, char *username) {
     if (list == NULL || (list->head == NULL && list->tail == NULL)) {
         return NULL;
     }
@@ -54,6 +56,22 @@ user_t * get_user(user_list_t *list, char *username) {
 
     while(temp != NULL) {
         if(temp->username == username) { 
+            return temp;                
+        }
+        temp = temp->next;
+    }  
+    return NULL;
+}
+
+user_t * get_user_fd(user_list_t *list, int fd) {
+    if (list == NULL || (list->head == NULL && list->tail == NULL)) {
+        return NULL;
+    }
+
+    user_t *temp = list->head;
+
+    while(temp != NULL) {
+        if(temp->user_descriptor == fd) { 
             return temp;                
         }
         temp = temp->next;

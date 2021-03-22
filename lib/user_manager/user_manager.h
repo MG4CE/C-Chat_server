@@ -3,11 +3,19 @@
 #include <stddef.h>
 #include <stdbool.h>    
 
+#define MAX_USERNAME_LEN 21
+
+typedef enum {
+    PRIVATE,
+    PUBLIC,
+}session;
+
 typedef struct connected_user {
-    char *username;
+    char username[MAX_USERNAME_LEN];
     int user_descriptor;
     bool is_connected;
-    bool is_available;
+    session session;
+    char select_username[MAX_USERNAME_LEN];
     struct connected_user *next;
 }user_t;
 
@@ -17,6 +25,7 @@ typedef struct connected_user_list {
 }user_list_t;
 
 void add_user(user_list_t *list, user_t *node);
-void remove_user(user_list_t *list, user_t *node);
-user_t * get_user(user_list_t *list, char *username);
+int remove_user(user_list_t *list, user_t *node);
+user_t * get_user_username(user_list_t *list, char *username);
+user_t * get_user_fd(user_list_t *list, int fd);
 #endif
