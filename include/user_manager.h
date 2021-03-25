@@ -4,6 +4,7 @@
 #include <stdbool.h>    
 
 #define MAX_USERNAME_LEN 21
+#define USER_LIMIT 100
 
 typedef enum {
     PRIVATE,
@@ -13,9 +14,6 @@ typedef enum {
 typedef struct connected_user {
     char username[MAX_USERNAME_LEN];
     int user_descriptor;
-    bool is_connected;
-    session session;
-    char select_username[MAX_USERNAME_LEN];
     struct connected_user *next;
 }user_t;
 

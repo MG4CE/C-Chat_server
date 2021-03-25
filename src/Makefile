@@ -1,15 +1,19 @@
 CC=gcc
-BIN_P=../bin
-CFLAG=-lpthread
-BIN_N=server
+CFLAGS=-I.
+D_BIN=../bin
+D_INC=../include
+DEPS = $(D_INC)/user_manager.h $(D_INC)/socket_server.h $(D_INC)/request_handler.h
+OBJ = $(D_BIN)/user_manager.o $(D_BIN)/socket_server.o $(D_BIN)/request_handler.o
+MAIN=main.c
 
-all: server
+%.o: %.c $(DEPS)
+	$(CC) -c -o $(D_BIN)/$@ $<
 
-server: main.c 
-	$(CC) -O0 -o $(BIN_P)/$(BIN_N) main.c $(CFLAG)
+server: $(OBJ)
+	$(CC) -O0 -Wall -c $(MAIN) -o $(D_BIN)/$@ $^ $(CFLAG)
 
-release: main.c
-	$(CC) -O2 -o $(BIN_P)/$(BIN_N) main.c $(CFLAG)
+release: $(OBJ)
+	$(CC) -O2 -Wall -c $(MAIN) -o $(D_BIN)/$@ $^ $(CFLAG)
 
 clean:
-	rm $(BIN_P)/$(BIN_N)
+	rm -r $(D_BIN)/*

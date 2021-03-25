@@ -72,8 +72,8 @@ int send_message_public(user_list_t *connected_users, user_t *sender, message_t 
 
     while (curr_user != NULL) {
         if (send_message(curr_user->user_descriptor, message, sizeof(message_t)) == -1){
-            fprintf(stderr, "ERROR: Failed to send to %s",curr_user->username);
-            //maybe disconnect client here?
+            fprintf(stderr, "ERROR: Failed to send to %s, closing connection.", curr_user->username);
+            client_disconnect(connected_users, curr_user);
         }
     }
 
@@ -81,9 +81,16 @@ int send_message_public(user_list_t *connected_users, user_t *sender, message_t 
 }
 
 int client_disconnect(user_list_t *connected_users, user_t *user) {
+    //inform all users of disconnect?
     if (remove_user(connected_users, user) == 0){
         return 0;
     }
-    //add connection close call when ready
-    return 1;
+
+    if (close_connection(user->user_descriptor) == 0){
+        return 1;
+    } else {
+        return -1;
+    }
+
+    return 0;
 }

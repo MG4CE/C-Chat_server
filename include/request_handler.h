@@ -1,8 +1,8 @@
 #ifndef REQUESTS_H
 #define REQUESTS_H
 
-#include "../lib/user_manager/user_manager.h"
-#include "../lib/socket_server/socket_server.h"
+#include "user_manager.h"
+#include "socket_server.h"
 #include <string.h>
 
 int client_connect(user_list_t *connected_users, int client_fd);
