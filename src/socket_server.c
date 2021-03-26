@@ -1,4 +1,4 @@
-#include "socket_server.h"
+#include "../include/socket_server.h"
 
 int create_socket() {
 	return socket(AF_INET , SOCK_STREAM , 0);
@@ -23,7 +23,7 @@ int accept_connection(server_socket_t *server_info) {
 }
 
 int send_message(int fd, message_t *message, size_t message_size) {
-	return write(client_fd, message, message_size);
+	return write(fd, message, message_size);
 }
 
 int fetch_message(int fd, message_t *message, size_t message_size) {

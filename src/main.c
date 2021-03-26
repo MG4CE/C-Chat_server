@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <errno.h>
+
 #include "../include/socket_server.h"
 #include "../include/request_handler.h"
 
@@ -11,6 +12,8 @@ typedef struct {
     user_list_t *list;
     int fd;
 }new_connection_t;
+
+void * client_handler(void *args);
 
 int main (int argc, char **argv) {
     int debug = 0;
@@ -134,7 +137,6 @@ void * client_handler(void *args) {
     free(info);
     free(user);
 }
-
 
 int process_request(message_t *msg) {
 
