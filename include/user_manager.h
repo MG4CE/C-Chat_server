@@ -7,11 +7,6 @@
 #define MAX_USERNAME_LEN 21
 #define USER_LIMIT 100
 
-typedef enum {
-    PRIVATE,
-    PUBLIC,
-}session;
-
 typedef struct connected_user {
     char username[MAX_USERNAME_LEN];
     int user_descriptor;
