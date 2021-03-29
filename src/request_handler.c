@@ -1,8 +1,10 @@
 #include "../include/request_handler.h"
 
 int client_connect(user_list_t *connected_users, int client_fd){
+    user_t *new_user = malloc(sizeof(user_t));
+    new_user->user_descriptor = client_fd;
     if (get_user_fd(connected_users, client_fd) == NULL) {
-        add_user(connected_users, client_fd);
+        add_user(connected_users, new_user);
         return 1;
     }
     return -1;
@@ -44,7 +46,7 @@ char * get_users_list(user_list_t *connected_users){
 
 
 int send_message_private(user_list_t *connected_users, user_t *sender, message_t *message) {
-    if (message->command != PRIVATE) {
+    if (message->command != SEND_PRIVATE) {
         return -3;
     }
     user_t *target = get_user_username(connected_users, message->selected_user);
@@ -52,7 +54,7 @@ int send_message_private(user_list_t *connected_users, user_t *sender, message_t
         return -2;
     }
     message_t forward;
-    forward.command = PRIVATE;
+    forward.command = SEND_PRIVATE;
     strcpy(forward.message, message->message);
     strcpy(forward.selected_user, sender->username);
 
@@ -64,7 +66,7 @@ int send_message_private(user_list_t *connected_users, user_t *sender, message_t
 }
 
 int send_message_public(user_list_t *connected_users, user_t *sender, message_t *message){
-    if (message->command != PUBLIC) {
+    if (message->command != SEND_PUBLIC) {
         return -1;
     }
 

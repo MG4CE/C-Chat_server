@@ -9,7 +9,7 @@ int bind_socket(server_socket_t *server) {
 	server_access_settings.sin_family = AF_INET;
 	server_access_settings.sin_addr.s_addr = INADDR_ANY;
 	server_access_settings.sin_port = htons(server->port);
-	return bind(server->socket_descriptor,(struct sockaddr *)&server , sizeof(server));
+	return bind(server->socket_descriptor,(struct sockaddr *)&server_access_settings , sizeof(struct sockaddr_in));
 }
 
 int listen_socket(server_socket_t *server) {

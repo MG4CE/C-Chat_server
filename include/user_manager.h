@@ -2,6 +2,7 @@
 #define USER_MANAGER_H 
 #include <stddef.h>
 #include <stdbool.h>    
+#include <stdlib.h>
 
 #define MAX_USERNAME_LEN 21
 #define USER_LIMIT 100

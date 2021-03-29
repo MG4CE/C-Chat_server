@@ -6,7 +6,7 @@
 #include<arpa/inet.h>
 #include<unistd.h>
 
-#define MAX_MESSAGE_LEN 4000
+#define MAX_MESSAGE_LEN 3950
 #define MAX_USERNAME_LEN 21
 #define BACKLOG_LIMIT 150
 

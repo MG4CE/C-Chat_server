@@ -4,6 +4,7 @@
 #include "user_manager.h"
 #include "socket_server.h"
 #include <string.h>
+#include <stdlib.h>
 
 int client_connect(user_list_t *connected_users, int client_fd);
 int set_username(user_list_t *connected_users, user_t *user, char *username);
