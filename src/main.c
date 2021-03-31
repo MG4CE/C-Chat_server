@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <errno.h>
+#include <sys/poll.h>
 
 #include "../include/socket_server.h"
 #include "../include/request_handler.h"
@@ -61,16 +62,18 @@ int main (int argc, char **argv) {
 
     server.port = atoi(port);
     if (server.port == 0) {
-        fprintf(stderr, "ERROR: Invalid Port!");
+        fprintf(stderr, "ERROR: Invalid Port!\n");
         exit(-1);
     }
 
     if (bind_socket(&server) == -1) {
-        fprintf(stderr, "ERROR: %s", strerror(errno));
+        fprintf(stderr, "ERROR: %s\n", strerror(errno));
+        exit(-1);
     }
 
     if (listen_socket(&server) == -1) {
-        fprintf(stderr, "ERROR: %s", strerror(errno));
+        fprintf(stderr, "ERROR: %s\n", strerror(errno));
+        exit(-1);
     }
 
     puts("Server Started!");
@@ -81,12 +84,13 @@ int main (int argc, char **argv) {
     user_list_t *list = malloc(sizeof(user_list_t));
 
     while ((new_client = accept_connection(&server)) != -1) {
+        printf("%d\n", new_client);
         if (user_count >= USER_LIMIT) {
             message_t server_full;
             server_full.command = ERROR;
             strcpy(server_full.message, "SERVER FULL");
             if (send_message(new_client, &server_full, sizeof(message_t))){
-                fprintf(stderr, "ERROR: %s", strerror(errno));
+                fprintf(stderr, "ERROR: %s\n", strerror(errno));
             }
             close(new_client);
         }
@@ -100,7 +104,8 @@ int main (int argc, char **argv) {
     }
 
     if (new_client == -1) {
-        fprintf(stderr, "ERROR: %s", strerror(errno));
+        fprintf(stderr, "ERROR: %s\n", strerror(errno));
+        exit(-1);
     }
 
     return 0;
@@ -118,39 +123,47 @@ void * client_handler(void *args) {
     //mutex lock here
     add_user(info->list, user);
 
-    fd_set event_fd, ready_fd;
+    //issue where messages are spammed when client killed while recv is blocking
 
-    FD_ZERO(&event_fd);
-    FD_SET(info->fd, &event_fd);
+    struct pollfd *fds = malloc(sizeof(struct pollfd));
 
-    while (1){
-        ready_fd = event_fd;
+    fds->fd = user->user_descriptor;
+    fds->events = POLLIN;
 
-        //add timeout
-        if (select(1, &ready_fd, NULL, NULL, NULL) == -1) {
-            fprintf(stderr, "ERROR: %s, on thread fd_%i", strerror(errno), user->user_descriptor);
+    while (1) {
+        int ret = poll(fds, 1, -1);
+
+        if (ret == -1) {
+            perror ("poll");
+            break;
         }
 
-        if (FD_ISSET(info->fd, &ready_fd)) {
+        if (!ret) {
+            printf ("%d seconds elapsed.\n", 10);
+            break;
+        }
+
+        if (fds->revents & POLLIN) {
             message_t msg;
             if (fetch_message(info->fd, &msg, sizeof(message_t)) == -1) {
-                fprintf(stderr, "ERROR: %s", strerror(errno));
+                fprintf(stderr, "ERROR: %s\n", strerror(errno));
                 close_connection(info->fd);
                 break;
-            } 
-            //mutex lock here
+            }
+
+            //mutex lock here\n
             if (process_request(info->list, user, &msg) == -1) {
                 //mutex unlock here
                 break;
             }
             //mutex unlock here
         }
-    }
+    }   
+
     remove_user(info->list, user);
     free(info);
-    free(user);
-
-    return 0;
+    free(fds);
+    return NULL;
 }
 
 int process_request(user_list_t *list, user_t *user, message_t *msg) {
@@ -159,7 +172,10 @@ int process_request(user_list_t *list, user_t *user, message_t *msg) {
     } else if (msg->command == SEND_PRIVATE) {
         return send_message_private(list, user, msg);
     } else if (msg->command == SET_USERNAME) {
-        return set_username(list, user, msg->selected_user);
+        set_username(list, user, msg->selected_user);
+        message_t msg_list;
+        msg_list.command = SUCCESS;
+        return send_message(user->user_descriptor, &msg_list, sizeof(message_t));
     } else if (msg->command == GET_USERS) {
         message_t msg_list;
         msg_list.command = GET_USERS;
