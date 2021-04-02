@@ -9,6 +9,8 @@
 #include "../include/socket_server.h"
 #include "../include/request_handler.h"
 
+//TODO fix address alrady in use error after quick start
+
 #define MAX_PORT_LEN 5
 
 typedef struct {
@@ -84,7 +86,6 @@ int main (int argc, char **argv) {
     user_list_t *list = malloc(sizeof(user_list_t));
 
     while ((new_client = accept_connection(&server)) != -1) {
-        printf("%d\n", new_client);
         if (user_count >= USER_LIMIT) {
             message_t server_full;
             server_full.command = ERROR;
@@ -123,7 +124,7 @@ void * client_handler(void *args) {
     //mutex lock here
     add_user(info->list, user);
 
-    //issue where messages are spammed when client killed while recv is blocking
+    //TODO Fix issue where messages are spammed and server crashes when client is killed
 
     struct pollfd *fds = malloc(sizeof(struct pollfd));
 
@@ -134,12 +135,12 @@ void * client_handler(void *args) {
         int ret = poll(fds, 1, -1);
 
         if (ret == -1) {
-            perror ("poll");
+            fprintf(stderr, "ERROR: %s", strerror(errno));
             break;
         }
 
         if (!ret) {
-            printf ("%d seconds elapsed.\n", 10);
+            puts("Connection Timedout!");
             break;
         }
 
@@ -151,7 +152,7 @@ void * client_handler(void *args) {
                 break;
             }
 
-            //mutex lock here\n
+            //mutex lock here
             if (process_request(info->list, user, &msg) == -1) {
                 //mutex unlock here
                 break;
@@ -166,28 +167,34 @@ void * client_handler(void *args) {
     return NULL;
 }
 
-int process_request(user_list_t *list, user_t *user, message_t *msg) {
-    if (msg->command == SEND_PUBLIC) {
-        return send_message_public(list, user, msg);
-    } else if (msg->command == SEND_PRIVATE) {
-        return send_message_private(list, user, msg);
-    } else if (msg->command == SET_USERNAME) {
-        set_username(list, user, msg->selected_user);
-        message_t msg_list;
-        msg_list.command = SUCCESS;
-        return send_message(user->user_descriptor, &msg_list, sizeof(message_t));
-    } else if (msg->command == GET_USERS) {
-        message_t msg_list;
-        msg_list.command = GET_USERS;
-        strcpy(msg_list.message, get_users_list(list));
-        return send_message(user->user_descriptor, &msg_list, sizeof(message_t));
-    } else if (msg->command == DISCONNECT) {
-        return client_disconnect(list, user);
-    } else {
-        message_t err_msg;
-        err_msg.command = ERROR;
-        strcpy(err_msg.message, "Unknown command!");
-        return send_message(user->user_descriptor, &err_msg, sizeof(message_t));
+int process_request(user_list_t *list, user_t *user, message_t *message) {
+    int ret = 0;
+    message_t msg;
+
+    switch (message->command) {   
+        case SEND_PUBLIC:
+            ret = send_message_public(list, user, message);
+            break;
+        case SEND_PRIVATE:
+            ret = send_message_private(list, user, message);
+            break;
+        case SET_USERNAME:
+            set_username(list, user, message->selected_user);
+            msg.command = SUCCESS;
+            ret = send_message(user->user_descriptor, &msg, sizeof(message_t));
+            break;
+        case GET_USERS:
+            msg.command = GET_USERS;
+            strcpy(msg.message, get_users_list(list));
+            ret = send_message(user->user_descriptor, &msg, sizeof(message_t));
+            break;
+        default:
+            msg.command = ERROR;
+            strcpy(msg.message, "Unknown command!");
+            ret = send_message(user->user_descriptor, &msg, sizeof(message_t));
+            break;
     }
+    return ret;
 }
+
  

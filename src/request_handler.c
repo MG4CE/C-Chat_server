@@ -39,6 +39,7 @@ char * get_users_list(user_list_t *connected_users){
     while (temp != NULL) {
         //TODO add size safety check just incase
         strcat(message, temp->username);
+        strcat(message, " ");
         temp = temp->next;
     }
     return message;
@@ -61,7 +62,6 @@ int send_message_private(user_list_t *connected_users, user_t *sender, message_t
     if (send_message(target->user_descriptor, &forward, sizeof(message_t)) == -1){
         return -1;
     }
-
     return 1;
 }
 
@@ -70,29 +70,35 @@ int send_message_public(user_list_t *connected_users, user_t *sender, message_t 
         return -1;
     }
 
+    strcpy(message->selected_user, sender->username);
+
     user_t *curr_user = connected_users->head;
 
     while (curr_user != NULL) {
+        if (curr_user == sender) {
+            curr_user = curr_user->next;
+            continue;
+        }
+        
         if (send_message(curr_user->user_descriptor, message, sizeof(message_t)) == -1){
             fprintf(stderr, "ERROR: Failed to send to %s, closing connection.", curr_user->username);
             client_disconnect(connected_users, curr_user);
+            remove_user(connected_users, curr_user);
         }
+        curr_user = curr_user->next;
     }
-
     return 1;
 }
 
 int client_disconnect(user_list_t *connected_users, user_t *user) {
-    //inform all users of disconnect?
+    //TODO inform all users of disconnect
     if (remove_user(connected_users, user) == 0){
         return 0;
     }
 
-    if (close_connection(user->user_descriptor) == 0){
-        return 1;
-    } else {
+    if (close_connection(user->user_descriptor) == -1) {
         return -1;
     }
 
-    return 0;
+    return 1;
 }
